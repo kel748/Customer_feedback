@@ -1,4 +1,8 @@
+-- M9 Customer Feedback Database
+-- tables: pharmacy_reviews, problem_reports
 
+-- these tables are from other modules, i just made simple versions
+-- so the foreign keys work. delete this part if u already have them
 create table if not exists users (
   user_id uuid primary key default gen_random_uuid()
 );
@@ -13,6 +17,8 @@ create table if not exists orders (
   merchant_id uuid references merchant_profiles(merchant_id)
 );
 
+
+-- Table 28: pharmacy_reviews
 -- one order can only have one review (order_id is unique)
 -- no resident or pharmacy id here, get them from orders
 create table pharmacy_reviews (
@@ -29,6 +35,7 @@ create table pharmacy_reviews (
 );
 
 
+-- Table 29: problem_reports
 -- order_id and merchant_id can be null if the complaint is not about an order or pharmacy
 create table problem_reports (
   report_id uuid primary key default gen_random_uuid(),
@@ -57,6 +64,7 @@ create table problem_reports (
   updated_at timestamptz default now()
 );
 
+-- indexes so searching is faster
 create index idx_problem_reports_user on problem_reports(user_id);
 create index idx_problem_reports_order on problem_reports(order_id);
 create index idx_problem_reports_merchant on problem_reports(merchant_id);
