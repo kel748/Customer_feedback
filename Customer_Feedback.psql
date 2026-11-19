@@ -1,8 +1,4 @@
--- M9 Customer Feedback Database
--- tables: pharmacy_reviews, problem_reports
 
--- these tables are from other modules, i just made simple versions
--- so the foreign keys work. delete this part if u already have them
 create table if not exists users (
   user_id uuid primary key default gen_random_uuid()
 );
