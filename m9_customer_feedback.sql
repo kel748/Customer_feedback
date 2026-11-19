@@ -1,0 +1,71 @@
+-- M9 Customer Feedback Database
+-- tables: pharmacy_reviews, problem_reports
+
+-- these tables are from other modules, i just made simple versions
+-- so the foreign keys work. delete this part if u already have them
+create table if not exists users (
+  user_id uuid primary key default gen_random_uuid()
+);
+
+create table if not exists merchant_profiles (
+  merchant_id uuid primary key default gen_random_uuid()
+);
+
+create table if not exists orders (
+  order_id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(user_id),
+  merchant_id uuid references merchant_profiles(merchant_id)
+);
+
+
+-- Table 28: pharmacy_reviews
+-- one order can only have one review (order_id is unique)
+-- no resident or pharmacy id here, get them from orders
+create table pharmacy_reviews (
+  review_id uuid primary key default gen_random_uuid(),
+  order_id uuid not null unique references orders(order_id),
+  rating smallint not null check (rating >= 1 and rating <= 5),
+  comment text,
+  status varchar(20) not null default 'visible' check (status in ('visible', 'hidden')),
+  merchant_reply text,
+  replied_at timestamptz,
+  moderation_reason text, -- admin writes why they hid the review
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+
+-- Table 29: problem_reports
+-- order_id and merchant_id can be null if the complaint is not about an order or pharmacy
+create table problem_reports (
+  report_id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references users(user_id),
+  order_id uuid references orders(order_id),
+  merchant_id uuid references merchant_profiles(merchant_id),
+  category varchar(50) not null check (category in (
+    'order_issue',
+    'payment_issue',
+    'delivery_issue',
+    'pharmacy_issue',
+    'product_issue',
+    'account_issue',
+    'other'
+  )),
+  description text not null,
+  status varchar(20) not null default 'open' check (status in (
+    'open',
+    'acknowledged',
+    'resolved',
+    'dismissed'
+  )),
+  admin_notes text, -- internal notes
+  resolution_note text, -- what was done to fix it
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- indexes so searching is faster
+create index idx_problem_reports_user on problem_reports(user_id);
+create index idx_problem_reports_order on problem_reports(order_id);
+create index idx_problem_reports_merchant on problem_reports(merchant_id);
+create index idx_problem_reports_status on problem_reports(status);
